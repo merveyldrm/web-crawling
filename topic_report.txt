@@ -1,0 +1,62 @@
+🔍 OTOMATIK KONU ÇIKARIMI RAPORU
+============================================================
+
+📊 Analiz Edilen Yorum Sayısı: 100
+
+🤖 LDA KONU ANALİZİ
+----------------------------------------
+
+📋 Konu 1: Genel Memnuniyet
+   🔑 Anahtar Kelimeler: ürün, stok, paketleme, güzel, sürekli
+
+📋 Konu 2: Stokluyorum & Ndirime & Içiyoruz
+   🔑 Anahtar Kelimeler: stokluyorum, ndirime, içiyoruz, kesinlikle, girdikçe stokluyorum
+
+📋 Konu 3: Stok & Stok Yapıyorum & Yapıyorum
+   🔑 Anahtar Kelimeler: stok, stok yapıyorum, yapıyorum, indirime, girdikçe
+
+📋 Konu 4: Genel Memnuniyet
+   🔑 Anahtar Kelimeler: güzel, ürün, harika, yaptığım ürün, stok yaptığım
+
+📋 Konu 5: Indirim & Ilk & Defa
+   🔑 Anahtar Kelimeler: indirim, ilk, defa, ilk defa, favorimiz
+
+🧠 EMBEDDING CLUSTERING ANALİZİ
+----------------------------------------
+
+📊 Küme 5: Genel Memnuniyet
+   📈 Yorum Sayısı: 20 (%21.3)
+   🔑 Anahtar Kelimeler: ürün, güzel, ilk, harika, stok
+   💬 Örnek: 1 Alana bir bedava vardı o zaman almıştım bayıldım çok güzel hep stoklayacağım bir ürün...
+
+📊 Küme 2: Genel Memnuniyet
+   📈 Yorum Sayısı: 20 (%21.3)
+   🔑 Anahtar Kelimeler: severek, güzel, kızım, koyuyorum, harika
+   💬 Örnek: bittikçe aldığım ğtün. hatta indirimde görürsem, stokluyorum. çocukşar severel tüketiyorlar. her sabah suluklarına koyuyorum. okulda tüketiyorsan. paketleme çok sağlam. akma sızma yok. memnunum tavsiy...
+
+📊 Küme 4: Stok & Indirime & Girdikçe
+   📈 Yorum Sayısı: 19 (%20.2)
+   🔑 Anahtar Kelimeler: stok, indirime, girdikçe, yapıyorum, indirim
+   💬 Örnek: indirime girdikçe stok yapiyom...
+
+📊 Küme 1: Stok & Yapıyorum & Indirime
+   📈 Yorum Sayısı: 18 (%19.1)
+   🔑 Anahtar Kelimeler: stok, yapıyorum, indirime, ndirime, stokluyorum
+   💬 Örnek: İndirimde alıp stok yapıyorum 😋...
+
+📊 Küme 3: Genel Memnuniyet
+   📈 Yorum Sayısı: 17 (%18.1)
+   🔑 Anahtar Kelimeler: çocuklarım, ürün, stok, oğlum, güzel
+   💬 Örnek: Severek kullanıyoruz indirim geldikçe stok yapıyorum oğlum çok sevdi...
+
+🔄 ORTAK KONULAR
+----------------------------------------
+   ✅ Genel Memnuniyet
+
+💡 ÖNERİLER
+----------------------------------------
+   📊 'Genel Memnuniyet' konusu yorumların %21ini oluşturuyor
+   📊 'Genel Memnuniyet' konusu yorumların %21ini oluşturuyor
+   📊 'Stok & Indirime & Girdikçe' konusu yorumların %20ini oluşturuyor
+   📊 'Stok & Yapıyorum & Indirime' konusu yorumların %19ini oluşturuyor
+   📊 'Genel Memnuniyet' konusu yorumların %18ini oluşturuyor

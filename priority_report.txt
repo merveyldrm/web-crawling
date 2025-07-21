@@ -1,0 +1,43 @@
+🚨 OLUMSUZLUK DERECESİ VE ÖNCELİKLENDİRME RAPORU
+================================================================================
+
+📊 ÖZET BİLGİLER
+   • Kritik Kategori Sayısı: 1
+
+🔥 EN YÜKSEK ÖNCELİK
+   📋 Kategori: KARGO
+   📊 Öncelik Skoru: 43.2/100
+   📝 Açıklama: Teslimat ve lojistik sorunları
+
+================================================================================
+📋 DETAYLI SORUN ANALİZİ
+================================================================================
+
+🔵 KARGO - ORTA ÖNCELİK
+   📊 Öncelik Skoru: 43.2/100
+   🏢 Sorumlu Departman: Lojistik
+   💬 Toplam Negatif Yorum: 3
+   📈 Ortalama Olumsuzluk: 0.0/10
+   🔥 Kritik Kelime Sayısı: 3
+   📅 Son 7 Gün İçindeki Şikayet: 0
+   📝 Örnek Problemler:
+      1. "Bizim evin vazgeçilmezi, indirimdeyken stoklanır......"
+         🔍 Kritik: geç
+      2. "vazgeçilmezimiz. İndirime girdikçe stokluyorum......."
+         🔍 Kritik: geç
+      3. "oğlum ek gıdaya geçtiğinden beri bittikçe stokladigim bir ürün bizde severek içeriyoruz......"
+         🔍 Kritik: geç
+
+================================================================================
+🎯 ÖNCELİKLENDİRİLMİŞ AKSİYON PLANI
+================================================================================
+
+🔵 AKSİYON 1: KARGO
+   ⏰ Aciliyet: ORTA - 1 hafta içinde
+   🎯 Aksiyon Tipi: Planlı İyileştirme
+   🏢 Sorumlu: Lojistik
+   📊 Problem Sayısı: 3
+   📋 Önerilen Aksiyonlar:
+      1. Kargo firması ile acil toplantı
+      2. Paketleme sürecini gözden geçir
+      3. Alternatif kargo seçenekleri değerlendir

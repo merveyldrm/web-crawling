@@ -1,0 +1,21 @@
+# Firebase RAG Sistemi Gereksinimleri
+
+# Firebase Admin SDK
+firebase-admin>=6.2.0
+
+# Google Cloud bağımlılıkları
+google-cloud-firestore>=2.11.0
+google-auth>=2.20.0
+google-cloud-core>=2.3.0
+
+# Veri işleme
+pandas>=1.5.0
+numpy>=1.21.0
+
+# Existing dependencies
+advanced-comment-analyzer  # Local module
+priority-analyzer         # Local module
+
+# Optional: Advanced features
+sentence-transformers>=2.2.0  # Gelişmiş semantic search için
+scikit-learn>=1.2.0          # Clustering ve ML için 

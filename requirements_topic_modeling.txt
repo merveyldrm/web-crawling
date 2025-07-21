@@ -1,0 +1,22 @@
+# Mevcut gereksinimler
+selenium>=4.0.0
+csv
+pandas
+numpy
+
+# Sentiment analizi için
+scikit-learn>=1.0.0
+
+# Topic modeling için
+nltk>=3.7
+sentence-transformers>=2.0.0
+
+# Veri işleme için
+numpy>=1.21.0
+scikit-learn>=1.0.0
+
+# Not: Kurulum için:
+# pip install -r requirements_topic_modeling.txt
+# 
+# Alternatif manuel kurulum:
+# pip install selenium scikit-learn nltk sentence-transformers numpy 

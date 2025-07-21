@@ -1,0 +1,72 @@
+body {
+    background-color: #100311;
+    color: #cd9cec;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.main-card {
+    background-color: #1c0a2e;
+    padding: 2rem;
+    border-radius: 15px;
+    border: 1px solid #580092;
+    box-shadow: 0 4px 20px rgba(88, 0, 146, 0.2);
+}
+
+h1, h2, h3 {
+    color: #cd9cec;
+    font-weight: 300;
+}
+
+.form-control {
+    background-color: #100311;
+    color: #cd9cec;
+    border: 1px solid #580092;
+    border-radius: 8px 0 0 8px;
+}
+
+.form-control::placeholder {
+    color: #a97cc2;
+}
+
+.form-control:focus {
+    background-color: #100311;
+    color: #cd9cec;
+    border-color: #cd9cec;
+    box-shadow: 0 0 0 0.25rem rgba(205, 156, 236, 0.25);
+}
+
+.btn-analyze {
+    background-color: #580092;
+    color: #ffffff;
+    border: 1px solid #580092;
+    border-radius: 0 8px 8px 0;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.btn-analyze:hover {
+    background-color: #7a1fb8;
+    border-color: #7a1fb8;
+    color: #ffffff;
+}
+
+.spinner-border {
+    color: #cd9cec;
+}
+
+.summary-box {
+    background-color: #100311;
+    border: 1px solid #580092;
+    padding: 1.5rem;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #e0c8f5;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.list-group-item {
+    background-color: transparent;
+    border: 1px solid #580092;
+    color: #cd9cec;
+}
