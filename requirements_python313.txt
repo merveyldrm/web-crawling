@@ -1,9 +1,12 @@
+# Python 3.13 Compatible Requirements
+# Use this file if you're using Python 3.13 and encounter compatibility issues
+
 # Core Streamlit and Web Framework
 streamlit>=1.28.0
 flask>=2.3.3
 
 # Data Processing and Analysis
-pandas>=2.1.0
+pandas>=2.2.0
 numpy>=1.26.0
 plotly>=5.15.0
 matplotlib>=3.8.0
@@ -20,18 +23,18 @@ nltk>=3.8.1
 chromadb>=0.4.0
 
 # Web Scraping
-selenium==4.15.2
-beautifulsoup4==4.12.2
-requests==2.31.0
+selenium>=4.15.0
+beautifulsoup4>=4.12.0
+requests>=2.31.0
 
 # Utilities
 python-dateutil>=2.8.0
 tqdm>=4.65.0
 Pillow>=10.0.0
 
-# Optional: GPU support (uncomment if needed)
-# faiss-gpu>=1.7.4
-# torch>=2.0.0
-
-# Note: For Python 3.13 compatibility, some packages may need specific versions
-# If you encounter issues, try using Python 3.11 or 3.12 instead 
+# Alternative packages for Python 3.13
+# If the above packages don't work, try these alternatives:
+# pandas>=2.1.0
+# numpy>=1.24.0
+# matplotlib>=3.7.0
+# scikit-learn>=1.3.0

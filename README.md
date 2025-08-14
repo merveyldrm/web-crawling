@@ -60,9 +60,12 @@
 
 ### Gereksinimler
 
-- Python 3.8+
-- 8GB+ RAM (AI modeller için)
-- Chrome/Chromium (Selenium scraping için)
+- **Python**: 3.8+ (3.11 veya 3.12 önerilir)
+- **RAM**: 8GB+ (AI modeller için)
+- **Browser**: Chrome/Chromium (Selenium scraping için)
+
+> **⚠️ Python 3.13 Uyumluluğu**: Bazı paketler Python 3.13 ile uyumlu olmayabilir. 
+> En iyi performans için Python 3.11 veya 3.12 kullanmanız önerilir.
 
 ### 1. Repository'yi Klonlayın
 
@@ -195,7 +198,10 @@ web-crawling/
 1. **Repository'yi GitHub'a push edin**
 2. **Streamlit Cloud'da yeni app oluşturun**
 3. **GitHub repository'yi bağlayın**
-4. **requirements.txt otomatik olarak yüklenecektir**
+4. **Python versiyonu**: 3.11 veya 3.12 seçin (3.13 uyumluluk sorunları olabilir)
+5. **requirements.txt otomatik olarak yüklenecektir**
+
+> **💡 İpucu**: Streamlit Cloud'da Python 3.11 veya 3.12 kullanarak uyumluluk sorunlarını önleyin.
 
 ### Local Deployment
 
@@ -294,7 +300,14 @@ python -c "import comprehensive_rag_streamlit; print('✅ All imports successful
 
 ### Yaygın Sorunlar
 
-1. **ModuleNotFoundError: plotly**
+1. **Python 3.13 Uyumluluk Sorunları**
+   ```bash
+   # Python 3.11 veya 3.12 kullanın
+   # Veya alternatif requirements dosyasını kullanın
+   pip install -r requirements_python313.txt
+   ```
+
+2. **ModuleNotFoundError: plotly**
    ```bash
    pip install plotly
    ```
