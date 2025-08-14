@@ -349,9 +349,7 @@ Bu proje MIT lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICE
 ## 📞 İletişim
 
 - **GitHub Issues**: [Proje Issues](https://github.com/yourusername/web-crawling/issues)
-- **Email**: your.email@example.com
-- **Discord**: [Sunucu Linki]
-
+- **Email**: merveyildirim021@gmail.com
 ---
 
 <div align="center">
