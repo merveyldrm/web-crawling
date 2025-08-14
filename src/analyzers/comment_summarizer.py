@@ -101,7 +101,11 @@ class CommentSummarizer:
         all_words = []
         
         for comment in comments:
-            text = comment.get('comment', '')
+            if isinstance(comment, str):
+                text = comment
+            else:
+                text = comment.get('comment', '')
+            
             if text:
                 # Metni temizle
                 clean_text = self.clean_text(text)
@@ -120,7 +124,15 @@ class CommentSummarizer:
         # Minimum frekans filtresi uygula
         keywords = {word: freq for word, freq in word_freq.items() if freq >= min_frequency}
         
-        return dict(sorted(keywords.items(), key=lambda x: x[1], reverse=True))
+        # UI için format
+        formatted_keywords = []
+        for word, freq in sorted(keywords.items(), key=lambda x: x[1], reverse=True):
+            formatted_keywords.append({
+                'word': word,
+                'frequency': freq
+            })
+        
+        return formatted_keywords
     
     def analyze_sentiment(self, comments):
         """Basit duygu analizi yapar"""
@@ -527,6 +539,197 @@ class CommentSummarizer:
             print(f"AI özeti başarıyla kaydedildi: {filename}")
         except Exception as e:
             print(f"AI özeti kaydetme hatası: {e}")
+    
+    def generate_summary(self, text, max_length=150):
+        """Tek bir yorum metni için özet oluşturur"""
+        if not text:
+            return "No text provided."
+        
+        # Metni temizle
+        clean_text = self.clean_text(text)
+        
+        # Kelimelere ayır
+        words = clean_text.split()
+        
+        # Stop words'leri filtrele
+        filtered_words = [word for word in words if word not in self.stop_words and len(word) > 2]
+        
+        # En önemli kelimeleri bul (frekans bazlı)
+        word_freq = Counter(filtered_words)
+        important_words = [word for word, freq in word_freq.most_common(10)]
+        
+        # Basit özet oluştur
+        if len(words) <= max_length // 5:  # Kısa metin
+            return text[:max_length] + "..." if len(text) > max_length else text
+        
+        # Anahtar kelimeleri kullanarak özet oluştur
+        summary_parts = []
+        current_length = 0
+        
+        for word in important_words[:5]:
+            # Bu kelimeyi içeren cümleyi bul
+            sentences = text.split('.')
+            for sentence in sentences:
+                if word in sentence.lower() and current_length < max_length:
+                    sentence = sentence.strip()
+                    if sentence and len(sentence) + current_length < max_length:
+                        summary_parts.append(sentence)
+                        current_length += len(sentence)
+                        break
+        
+        if summary_parts:
+            summary = '. '.join(summary_parts) + '.'
+            return summary[:max_length] + "..." if len(summary) > max_length else summary
+        else:
+            # Fallback: ilk cümleleri al
+            sentences = text.split('.')
+            summary = '. '.join([s.strip() for s in sentences[:3] if s.strip()])
+            return summary[:max_length] + "..." if len(summary) > max_length else summary
+    
+    def generate_insights(self, texts, keywords):
+        """Metinlerden iş insights'ları oluşturur"""
+        insights = []
+        
+        # Kategori bazlı analiz
+        categories = {
+            'kargo': ['kargo', 'teslimat', 'paket', 'gönderi', 'hızlı', 'yavaş', 'geç', 'geldi'],
+            'kalite': ['kalite', 'sağlam', 'dayanıklı', 'bozuk', 'kırık', 'orijinal', 'sahte'],
+            'fiyat': ['fiyat', 'ucuz', 'pahalı', 'uygun', 'değer', 'indirim'],
+            'hizmet': ['hizmet', 'müşteri', 'destek', 'yardım', 'kaba', 'ilgisiz'],
+            'ürün': ['ürün', 'model', 'renk', 'beden', 'uyum', 'küçük', 'büyük']
+        }
+        
+        for category, keywords_list in categories.items():
+            category_texts = []
+            for text in texts:
+                text_lower = text.lower()
+                if any(kw in text_lower for kw in keywords_list):
+                    category_texts.append(text)
+            
+            if category_texts:
+                # Sentiment analizi
+                positive_count = 0
+                negative_count = 0
+                
+                positive_words = ['güzel', 'iyi', 'mükemmel', 'harika', 'süper', 'kaliteli', 'hızlı', 'sağlam']
+                negative_words = ['kötü', 'berbat', 'kırık', 'bozuk', 'yavaş', 'sorun', 'problem']
+                
+                for text in category_texts:
+                    text_lower = text.lower()
+                    pos_score = sum(1 for word in positive_words if word in text_lower)
+                    neg_score = sum(1 for word in negative_words if word in text_lower)
+                    
+                    if pos_score > neg_score:
+                        positive_count += 1
+                    elif neg_score > pos_score:
+                        negative_count += 1
+                
+                total = len(category_texts)
+                if total > 0:
+                    positive_percentage = (positive_count / total) * 100
+                    negative_percentage = (negative_count / total) * 100
+                    
+                    # Insight oluştur
+                    if positive_percentage > 60:
+                        sentiment = "positive"
+                        title = f"Strong {category.title()} Performance"
+                        description = f"Customers are highly satisfied with {category} aspects, with {positive_percentage:.1f}% positive feedback."
+                        recommendations = [
+                            f"Maintain current {category} standards",
+                            f"Highlight {category} strengths in marketing",
+                            f"Use as case study for other areas"
+                        ]
+                    elif negative_percentage > 60:
+                        sentiment = "negative"
+                        title = f"{category.title()} Issues Require Attention"
+                        description = f"Significant concerns about {category} with {negative_percentage:.1f}% negative feedback."
+                        recommendations = [
+                            f"Investigate {category} problems immediately",
+                            f"Develop improvement plan for {category}",
+                            f"Consider customer feedback training"
+                        ]
+                    else:
+                        sentiment = "mixed"
+                        title = f"Mixed {category.title()} Feedback"
+                        description = f"Varied opinions on {category} with {positive_percentage:.1f}% positive and {negative_percentage:.1f}% negative."
+                        recommendations = [
+                            f"Analyze {category} feedback patterns",
+                            f"Identify specific improvement areas",
+                            f"Consider targeted {category} enhancements"
+                        ]
+                    
+                    insights.append({
+                        'category': category,
+                        'title': title,
+                        'description': description,
+                        'sentiment': sentiment,
+                        'positive_percentage': positive_percentage,
+                        'negative_percentage': negative_percentage,
+                        'total_comments': total,
+                        'recommendations': recommendations
+                    })
+        
+        return insights
+    
+    def generate_comprehensive_report(self, texts, keywords, insights, summaries):
+        """Kapsamlı analiz raporu oluşturur"""
+        report = []
+        report.append("COMPREHENSIVE COMMENT ANALYSIS REPORT")
+        report.append("=" * 60)
+        report.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        report.append(f"Total Comments Analyzed: {len(texts)}")
+        report.append("")
+        
+        # Keywords Section
+        if keywords:
+            report.append("KEY KEYWORDS")
+            report.append("-" * 30)
+            for i, keyword in enumerate(keywords[:20], 1):
+                report.append(f"{i:2d}. {keyword['word']}: {keyword['frequency']} occurrences")
+            report.append("")
+        
+        # Insights Section
+        if insights:
+            report.append("BUSINESS INSIGHTS")
+            report.append("-" * 30)
+            for i, insight in enumerate(insights, 1):
+                report.append(f"{i}. {insight['title']}")
+                report.append(f"   Category: {insight['category']}")
+                report.append(f"   Sentiment: {insight['sentiment']}")
+                report.append(f"   Description: {insight['description']}")
+                if insight.get('recommendations'):
+                    report.append("   Recommendations:")
+                    for rec in insight['recommendations']:
+                        report.append(f"     • {rec}")
+                report.append("")
+        
+        # Summaries Section
+        if summaries:
+            report.append("COMMENT SUMMARIES")
+            report.append("-" * 30)
+            for i, summary in enumerate(summaries[:10], 1):
+                report.append(f"{i}. {summary}")
+                report.append("")
+        
+        # Executive Summary
+        report.append("EXECUTIVE SUMMARY")
+        report.append("-" * 30)
+        
+        if insights:
+            positive_insights = [i for i in insights if i['sentiment'] == 'positive']
+            negative_insights = [i for i in insights if i['sentiment'] == 'negative']
+            
+            report.append(f"• {len(positive_insights)} areas showing strong performance")
+            report.append(f"• {len(negative_insights)} areas requiring immediate attention")
+            report.append(f"• {len(keywords)} key themes identified")
+            report.append(f"• {len(summaries)} detailed summaries generated")
+        
+        report.append("")
+        report.append("=" * 60)
+        report.append("REPORT COMPLETED")
+        
+        return '\n'.join(report)
+
 
 def main():
     summarizer = CommentSummarizer()
@@ -555,6 +758,197 @@ def main():
     summarizer.save_ai_summary_to_txt(ai_summary, 'comment_summary.txt')
     
     print("\nİşlem tamamlandı!")
+
+    def generate_summary(self, text, max_length=150):
+        """Tek bir yorum metni için özet oluşturur"""
+        if not text:
+            return "No text provided."
+        
+        # Metni temizle
+        clean_text = self.clean_text(text)
+        
+        # Kelimelere ayır
+        words = clean_text.split()
+        
+        # Stop words'leri filtrele
+        filtered_words = [word for word in words if word not in self.stop_words and len(word) > 2]
+        
+        # En önemli kelimeleri bul (frekans bazlı)
+        word_freq = Counter(filtered_words)
+        important_words = [word for word, freq in word_freq.most_common(10)]
+        
+        # Basit özet oluştur
+        if len(words) <= max_length // 5:  # Kısa metin
+            return text[:max_length] + "..." if len(text) > max_length else text
+        
+        # Anahtar kelimeleri kullanarak özet oluştur
+        summary_parts = []
+        current_length = 0
+        
+        for word in important_words[:5]:
+            # Bu kelimeyi içeren cümleyi bul
+            sentences = text.split('.')
+            for sentence in sentences:
+                if word in sentence.lower() and current_length < max_length:
+                    sentence = sentence.strip()
+                    if sentence and len(sentence) + current_length < max_length:
+                        summary_parts.append(sentence)
+                        current_length += len(sentence)
+                        break
+        
+        if summary_parts:
+            summary = '. '.join(summary_parts) + '.'
+            return summary[:max_length] + "..." if len(summary) > max_length else summary
+        else:
+            # Fallback: ilk cümleleri al
+            sentences = text.split('.')
+            summary = '. '.join([s.strip() for s in sentences[:3] if s.strip()])
+            return summary[:max_length] + "..." if len(summary) > max_length else summary
+    
+    def generate_insights(self, texts, keywords):
+        """Metinlerden iş insights'ları oluşturur"""
+        insights = []
+        
+        # Kategori bazlı analiz
+        categories = {
+            'kargo': ['kargo', 'teslimat', 'paket', 'gönderi', 'hızlı', 'yavaş', 'geç', 'geldi'],
+            'kalite': ['kalite', 'sağlam', 'dayanıklı', 'bozuk', 'kırık', 'orijinal', 'sahte'],
+            'fiyat': ['fiyat', 'ucuz', 'pahalı', 'uygun', 'değer', 'indirim'],
+            'hizmet': ['hizmet', 'müşteri', 'destek', 'yardım', 'kaba', 'ilgisiz'],
+            'ürün': ['ürün', 'model', 'renk', 'beden', 'uyum', 'küçük', 'büyük']
+        }
+        
+        for category, keywords_list in categories.items():
+            category_texts = []
+            for text in texts:
+                text_lower = text.lower()
+                if any(kw in text_lower for kw in keywords_list):
+                    category_texts.append(text)
+            
+            if category_texts:
+                # Sentiment analizi
+                positive_count = 0
+                negative_count = 0
+                
+                positive_words = ['güzel', 'iyi', 'mükemmel', 'harika', 'süper', 'kaliteli', 'hızlı', 'sağlam']
+                negative_words = ['kötü', 'berbat', 'kırık', 'bozuk', 'yavaş', 'sorun', 'problem']
+                
+                for text in category_texts:
+                    text_lower = text.lower()
+                    pos_score = sum(1 for word in positive_words if word in text_lower)
+                    neg_score = sum(1 for word in negative_words if word in text_lower)
+                    
+                    if pos_score > neg_score:
+                        positive_count += 1
+                    elif neg_score > pos_score:
+                        negative_count += 1
+                
+                total = len(category_texts)
+                if total > 0:
+                    positive_percentage = (positive_count / total) * 100
+                    negative_percentage = (negative_count / total) * 100
+                    
+                    # Insight oluştur
+                    if positive_percentage > 60:
+                        sentiment = "positive"
+                        title = f"Strong {category.title()} Performance"
+                        description = f"Customers are highly satisfied with {category} aspects, with {positive_percentage:.1f}% positive feedback."
+                        recommendations = [
+                            f"Maintain current {category} standards",
+                            f"Highlight {category} strengths in marketing",
+                            f"Use as case study for other areas"
+                        ]
+                    elif negative_percentage > 60:
+                        sentiment = "negative"
+                        title = f"{category.title()} Issues Require Attention"
+                        description = f"Significant concerns about {category} with {negative_percentage:.1f}% negative feedback."
+                        recommendations = [
+                            f"Investigate {category} problems immediately",
+                            f"Develop improvement plan for {category}",
+                            f"Consider customer feedback training"
+                        ]
+                    else:
+                        sentiment = "mixed"
+                        title = f"Mixed {category.title()} Feedback"
+                        description = f"Varied opinions on {category} with {positive_percentage:.1f}% positive and {negative_percentage:.1f}% negative."
+                        recommendations = [
+                            f"Analyze {category} feedback patterns",
+                            f"Identify specific improvement areas",
+                            f"Consider targeted {category} enhancements"
+                        ]
+                    
+                    insights.append({
+                        'category': category,
+                        'title': title,
+                        'description': description,
+                        'sentiment': sentiment,
+                        'positive_percentage': positive_percentage,
+                        'negative_percentage': negative_percentage,
+                        'total_comments': total,
+                        'recommendations': recommendations
+                    })
+        
+        return insights
+    
+    def generate_comprehensive_report(self, texts, keywords, insights, summaries):
+        """Kapsamlı analiz raporu oluşturur"""
+        report = []
+        report.append("COMPREHENSIVE COMMENT ANALYSIS REPORT")
+        report.append("=" * 60)
+        report.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        report.append(f"Total Comments Analyzed: {len(texts)}")
+        report.append("")
+        
+        # Keywords Section
+        if keywords:
+            report.append("KEY KEYWORDS")
+            report.append("-" * 30)
+            for i, keyword in enumerate(keywords[:20], 1):
+                report.append(f"{i:2d}. {keyword['word']}: {keyword['frequency']} occurrences")
+            report.append("")
+        
+        # Insights Section
+        if insights:
+            report.append("BUSINESS INSIGHTS")
+            report.append("-" * 30)
+            for i, insight in enumerate(insights, 1):
+                report.append(f"{i}. {insight['title']}")
+                report.append(f"   Category: {insight['category']}")
+                report.append(f"   Sentiment: {insight['sentiment']}")
+                report.append(f"   Description: {insight['description']}")
+                if insight.get('recommendations'):
+                    report.append("   Recommendations:")
+                    for rec in insight['recommendations']:
+                        report.append(f"     • {rec}")
+                report.append("")
+        
+        # Summaries Section
+        if summaries:
+            report.append("COMMENT SUMMARIES")
+            report.append("-" * 30)
+            for i, summary in enumerate(summaries[:10], 1):
+                report.append(f"{i}. {summary}")
+                report.append("")
+        
+        # Executive Summary
+        report.append("EXECUTIVE SUMMARY")
+        report.append("-" * 30)
+        
+        if insights:
+            positive_insights = [i for i in insights if i['sentiment'] == 'positive']
+            negative_insights = [i for i in insights if i['sentiment'] == 'negative']
+            
+            report.append(f"• {len(positive_insights)} areas showing strong performance")
+            report.append(f"• {len(negative_insights)} areas requiring immediate attention")
+            report.append(f"• {len(keywords)} key themes identified")
+            report.append(f"• {len(summaries)} detailed summaries generated")
+        
+        report.append("")
+        report.append("=" * 60)
+        report.append("REPORT COMPLETED")
+        
+        return '\n'.join(report)
+
 
 if __name__ == "__main__":
     main()

@@ -5,6 +5,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service
 
 class TrendyolSeleniumScraper:
     def __init__(self):
@@ -21,7 +23,10 @@ class TrendyolSeleniumScraper:
         options.add_argument('--start-maximized')
         # Gerçek kullanıcı gibi görün
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
-        self.driver = webdriver.Chrome(options=options)
+        
+        # Otomatik Chrome driver yönetimi
+        service = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service=service, options=options)
         
         # Bot tespitini engelle
         self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
@@ -339,7 +344,7 @@ class TrendyolSeleniumScraper:
             print(f"Element parse hatası: {e}")
         return comment_data
 
-    def scroll_and_collect_comments(self, min_comments=100, max_scrolls=100):
+    def scroll_and_collect_comments(self, min_comments=1000, max_scrolls=200):
         all_comments = []
         seen = set()
         last_count = 0
@@ -350,7 +355,7 @@ class TrendyolSeleniumScraper:
         for i in range(max_scrolls):
             # Scroll to bottom
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-            time.sleep(3)  # Daha uzun bekle
+            time.sleep(2)  # Optimize edilmiş bekleme süresi
             
             # Yorumlar bölümüne odaklan
             try:
@@ -361,7 +366,7 @@ class TrendyolSeleniumScraper:
             except:
                 pass
             
-            # 'Daha fazla göster' veya benzeri butonları tıkla
+            # 'Daha fazla göster' veya benzeri butonları tıkla (daha agresif)
             try:
                 # Daha geniş buton arama
                 more_buttons = self.driver.find_elements(By.XPATH, 
@@ -369,25 +374,28 @@ class TrendyolSeleniumScraper:
                     "contains(text(), 'daha fazla') or contains(text(), 'göster') or " +
                     "contains(text(), 'Göster') or contains(text(), 'yükle') or " +
                     "contains(text(), 'Yükle') or contains(text(), 'Sonraki') or " +
-                    "contains(text(), 'Load') or contains(text(), 'More')]"
+                    "contains(text(), 'Load') or contains(text(), 'More') or " +
+                    "contains(text(), 'Tümünü') or contains(text(), 'tümünü')]"
                 )
                 
                 # Veya class'a göre bul
                 if not more_buttons:
                     more_buttons = self.driver.find_elements(By.CSS_SELECTOR, 
-                        "button[class*='more'], button[class*='load'], button[class*='show']"
+                        "button[class*='more'], button[class*='load'], button[class*='show'], " +
+                        "a[class*='more'], a[class*='load'], div[class*='load-more']"
                     )
                 
                 for btn in more_buttons:
                     if btn.is_displayed() and btn.is_enabled():
                         self.driver.execute_script("arguments[0].click();", btn)
                         print(f"Daha fazla yorum butonuna tıklandı. (Scroll {i+1})")
-                        time.sleep(3)
+                        time.sleep(2)
+                        break  # İlk butona tıkladıktan sonra dur
             except Exception as e:
                 pass
             
             # Ajax yüklemelerini bekle
-            time.sleep(2)
+            time.sleep(1)
             
             # Yeni yorumları topla
             new_comments = self.extract_comments_from_page()
@@ -411,21 +419,21 @@ class TrendyolSeleniumScraper:
             # Yeni yorum gelmiyorsa
             if len(all_comments) == last_count:
                 no_new_comments_count += 1
-                if no_new_comments_count >= 5:  # 5 kez üst üste yeni yorum gelmezse dur
+                if no_new_comments_count >= 10:  # 10 kez üst üste yeni yorum gelmezse dur
                     print(f"Daha fazla yorum bulunamadı. Toplam: {len(all_comments)}")
-                break
+                    break
             else:
                 no_new_comments_count = 0
             
             last_count = len(all_comments)
             
-            # Her 10 scroll'da bir sayfayı yenile
-            if i > 0 and i % 10 == 0:
+            # Her 20 scroll'da bir sayfayı yenile (daha az sıklıkta)
+            if i > 0 and i % 20 == 0:
                 current_scroll = self.driver.execute_script("return window.pageYOffset;")
                 self.driver.refresh()
-                time.sleep(5)
+                time.sleep(3)
                 self.driver.execute_script(f"window.scrollTo(0, {current_scroll});")
-                time.sleep(2)
+                time.sleep(1)
         
         print(f"Toplam {len(all_comments)} benzersiz yorum toplandı.")
         return all_comments
@@ -618,29 +626,31 @@ class TrendyolSeleniumScraper:
 
     def scrape_comments(self, product_url, min_comments=100, max_scrolls=50):
         max_retries = 3
+        comments = []
         
         for attempt in range(max_retries):
             try:
                 print(f"Deneme {attempt + 1}/{max_retries}")
-            print(f"Sayfa yükleniyor: {product_url}")
-            self.driver.get(product_url)
+                print(f"Sayfa yükleniyor: {product_url}")
+                self.driver.get(product_url)
                 
                 # Sayfa yüklendikten sonra ekran boyutunu tekrar kontrol et
                 self.driver.set_window_size(2560, 1440)
                 self.driver.execute_script("document.body.style.zoom='1.0'")
                 
-            time.sleep(5)
-            if not self.wait_for_comments_to_load():
-                print("Yorumlar yüklenemedi!")
-                return []
-            comments = self.scroll_and_collect_comments(min_comments=min_comments, max_scrolls=max_scrolls)
+                time.sleep(5)
+                if not self.wait_for_comments_to_load():
+                    print("Yorumlar yüklenemedi!")
+                    continue
+                    
+                comments = self.scroll_and_collect_comments(min_comments=min_comments, max_scrolls=max_scrolls)
                 
                 if len(comments) >= 30:  # Başarılı sayılır
-            return comments
+                    return comments
                 else:
                     print(f"Yeterli yorum alınamadı ({len(comments)}), tekrar deneniyor...")
                     
-        except Exception as e:
+            except Exception as e:
                 print(f"Deneme {attempt + 1} başarısız: {e}")
                 if attempt < max_retries - 1:
                     time.sleep(5)  # Tekrar denemeden önce bekle
@@ -668,17 +678,18 @@ class TrendyolSeleniumScraper:
         
         return comments
 
-    def save_to_csv(self, comments, filename='trendyol_comments.csv', min_comments=100):
+    def save_to_csv(self, comments, filename='trendyol_comments.csv', min_comments=1000):
         if not comments:
             print("Kaydedilecek yorum bulunamadı!")
             return
         
-        # If comments less than 100, save all of them
-        # If comments more than 100, save only the first 100
-        if len(comments) < 100:
-            to_save = comments  # Save all comments
+        # Dinamik kaydetme stratejisi
+        if len(comments) < min_comments:
+            to_save = comments  # Tüm yorumları kaydet
+            print(f"Yorum sayısı hedeften az ({len(comments)}), tümü kaydediliyor.")
         else:
-            to_save = comments[:100]  # Save only first 100 comments
+            to_save = comments[:min_comments]  # Hedef sayıda yorum kaydet
+            print(f"Yorum sayısı hedeften fazla ({len(comments)}), ilk {min_comments} tanesi kaydediliyor.")
             
         with open(filename, 'w', newline='', encoding='utf-8-sig') as csvfile:
             fieldnames = ['user', 'date', 'comment', 'rating', 'seller']
@@ -695,17 +706,26 @@ class TrendyolSeleniumScraper:
 if __name__ == "__main__":
     url = input("Lütfen Trendyol ürününün URL'sini girin: ").strip()
     scraper = TrendyolSeleniumScraper()
-    # Increase max_scrolls to get more comments (e.g., 100 scrolls instead of 30)
-    comments = scraper.scrape_comments(url, min_comments=100, max_scrolls=50)
     
-    # If comments less than 100, save all of them
-    # If comments more than 100, save only the first 100
-    if len(comments) < 100:
+    # Hedef yorum sayısını belirle
+    target_comments = input("Hedef yorum sayısını girin (varsayılan: 1000): ").strip()
+    if not target_comments:
+        target_comments = 1000
+    else:
+        target_comments = int(target_comments)
+    
+    print(f"Hedef: {target_comments} yorum çekmek")
+    
+    # Yorumları çek
+    comments = scraper.scrape_comments(url, min_comments=target_comments, max_scrolls=200)
+    
+    # Sonuçları kaydet
+    if len(comments) < target_comments:
         scraper.save_to_csv(comments, min_comments=len(comments))
         print(f"Toplam {len(comments)} yorum bulundu ve hepsi kaydedildi.")
     else:
-    scraper.save_to_csv(comments, min_comments=100)
-        print(f"Toplam {len(comments)} yorum bulundu, ilk 100'ü kaydedildi.")
+        scraper.save_to_csv(comments, min_comments=target_comments)
+        print(f"Toplam {len(comments)} yorum bulundu, ilk {target_comments} tanesi kaydedildi.")
     
     scraper.close()
     print("İşlem tamamlandı.")

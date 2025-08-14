@@ -23,28 +23,28 @@ class MyHttpRequestHandler(http.server.SimpleHTTPRequestHandler):
 
             try:
                 # 1. Scraper betiğini URL ile güncelle
-                print("1. trendyol_selenium_scraper.py güncelleniyor...")
-                with open('trendyol_selenium_scraper.py', 'r', encoding='utf-8') as f:
+                print("1. src/scrapers/trendyol_selenium_scraper.py güncelleniyor...")
+                with open('src/scrapers/trendyol_selenium_scraper.py', 'r', encoding='utf-8') as f:
                     scraper_code = f.read()
                 
                 # URL'yi bul ve değiştir (daha esnek hale getirildi)
                 import re
                 new_scraper_code = re.sub(r'url = ".*"', f'url = "{product_url}"', scraper_code)
 
-                with open('trendyol_selenium_scraper.py', 'w', encoding='utf-8') as f:
+                with open('src/scrapers/trendyol_selenium_scraper.py', 'w', encoding='utf-8') as f:
                     f.write(new_scraper_code)
                 print("Scraper güncellendi.")
 
                 # 2. Scraper'ı çalıştır
                 print("2. Yorumlar çekiliyor (scraper çalıştırılıyor)...")
-                scraper_process = subprocess.run(['python', 'trendyol_selenium_scraper.py'], capture_output=True, text=True, check=True, encoding='utf-8')
+                scraper_process = subprocess.run(['python', 'src/scrapers/trendyol_selenium_scraper.py'], capture_output=True, text=True, check=True, encoding='utf-8')
                 print("Scraper stdout:", scraper_process.stdout)
                 print("Scraper stderr:", scraper_process.stderr)
                 print("Yorumlar çekildi.")
 
                 # 3. Özetleyiciyi çalıştır
                 print("3. Yorumlar özetleniyor (summarizer çalıştırılıyor)...")
-                summarizer_process = subprocess.run(['python', 'comment_summarizer.py'], capture_output=True, text=True, check=True, encoding='utf-8')
+                summarizer_process = subprocess.run(['python', 'src/analyzers/comment_summarizer.py'], capture_output=True, text=True, check=True, encoding='utf-8')
                 print("Summarizer stdout:", summarizer_process.stdout)
                 print("Summarizer stderr:", summarizer_process.stderr)
                 print("Yorumlar özetlendi.")
