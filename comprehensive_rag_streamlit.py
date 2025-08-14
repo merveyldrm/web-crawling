@@ -550,7 +550,27 @@ if st.session_state.system_ready:
             
             if st.button("🚀 Start Scraping", type="primary", help="This will open a web browser and scrape comments"):
                 if not SCRAPER_AVAILABLE:
-                    st.error("❌ Scraper not available. Please ensure trendyol_selenium_scraper.py exists in src/scrapers/")
+                    st.warning("🚧 Selenium-based scraping is not available in Streamlit Cloud due to system limitations.")
+                    st.info("💡 Please use the CSV upload feature above to load your comment data.")
+                    
+                    with st.expander("📖 How to get Trendyol comments manually"):
+                        st.markdown("""
+                        **Manual Comment Collection Steps:**
+                        
+                        1. **Visit the Trendyol product page**
+                        2. **Scroll down to comments section** 
+                        3. **Load more comments** by clicking "Load More" or scrolling
+                        4. **Copy comments manually** or use browser developer tools
+                        5. **Create a CSV file** with columns: `text`, `rating`, `date`
+                        6. **Upload the CSV** using the file uploader above
+                        
+                        **CSV Format Example:**
+                        ```
+                        text,rating,date
+                        "Ürün çok güzel, beğendim",5,"2024-01-15"
+                        "Kargo geç geldi ama kalite iyi",4,"2024-01-14"
+                        ```
+                        """)
                 elif product_url and product_url.startswith("https://www.trendyol.com"):
                     with st.spinner("🕷️ Scraping comments from Trendyol... This may take several minutes..."):
                         try:
