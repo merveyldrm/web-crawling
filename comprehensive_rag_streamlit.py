@@ -10,8 +10,14 @@ import json
 import numpy as np
 import os
 import sqlite3
-import plotly.express as px
-import plotly.graph_objects as go
+# Plotly imports with fallback
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+    PLOTLY_AVAILABLE = True
+except ImportError:
+    PLOTLY_AVAILABLE = False
+    print("Warning: Plotly not available. Charts will be disabled.")
 from datetime import datetime, timedelta
 import time
 from typing import List, Dict, Any
@@ -817,7 +823,7 @@ if st.session_state.system_ready:
                     st.metric("Average Priority", f"{stats['average_priority']:.1f}")
                 
                 # Category distribution visualization
-                if stats.get('category_distribution'):
+                if stats.get('category_distribution') and PLOTLY_AVAILABLE:
                     st.subheader("📊 Category Distribution")
                     category_data = stats['category_distribution']
                     
@@ -827,6 +833,13 @@ if st.session_state.system_ready:
                         title="Comment Categories"
                     )
                     st.plotly_chart(fig, use_container_width=True)
+                elif stats.get('category_distribution'):
+                    st.subheader("📊 Category Distribution")
+                    category_data = stats['category_distribution']
+                    st.write("**Categories:**")
+                    for category, count in category_data.items():
+                        st.write(f"- {category}: {count}")
+                    st.info("📊 Chart visualization disabled (Plotly not available)")
                 
                 # Database info
                 st.subheader("💾 Database Information")
@@ -1181,27 +1194,35 @@ if st.session_state.system_ready:
                 if stats.get('category_distribution'):
                     st.subheader("📊 Category Distribution")
                     
-                    # Create pie chart
-                    category_data = stats['category_distribution']
-                    fig_pie = px.pie(
-                        values=list(category_data.values()),
-                        names=list(category_data.keys()),
-                        title="Comment Categories Distribution",
-                        color_discrete_sequence=px.colors.qualitative.Set3
-                    )
-                    fig_pie.update_traces(textposition='inside', textinfo='percent+label')
-                    st.plotly_chart(fig_pie, use_container_width=True)
-                    
-                    # Create bar chart
-                    fig_bar = px.bar(
-                        x=list(category_data.keys()),
-                        y=list(category_data.values()),
-                        title="Comments by Category",
-                        color=list(category_data.values()),
-                        color_continuous_scale="Viridis"
-                    )
-                    fig_bar.update_layout(showlegend=False)
-                    st.plotly_chart(fig_bar, use_container_width=True)
+                    if PLOTLY_AVAILABLE:
+                        # Create pie chart
+                        category_data = stats['category_distribution']
+                        fig_pie = px.pie(
+                            values=list(category_data.values()),
+                            names=list(category_data.keys()),
+                            title="Comment Categories Distribution",
+                            color_discrete_sequence=px.colors.qualitative.Set3
+                        )
+                        fig_pie.update_traces(textposition='inside', textinfo='percent+label')
+                        st.plotly_chart(fig_pie, use_container_width=True)
+                        
+                        # Create bar chart
+                        fig_bar = px.bar(
+                            x=list(category_data.keys()),
+                            y=list(category_data.values()),
+                            title="Comments by Category",
+                            color=list(category_data.values()),
+                            color_continuous_scale="Viridis"
+                        )
+                        fig_bar.update_layout(showlegend=False)
+                        st.plotly_chart(fig_bar, use_container_width=True)
+                    else:
+                        # Fallback display without charts
+                        category_data = stats['category_distribution']
+                        st.write("**Category Distribution:**")
+                        for category, count in category_data.items():
+                            st.write(f"- {category}: {count}")
+                        st.info("📊 Chart visualization disabled (Plotly not available)")
             
             with chart_col2:
                 st.subheader("🧠 System Performance Metrics")
@@ -1213,27 +1234,37 @@ if st.session_state.system_ready:
                     "Target": [80, 90, 85, 90]
                 }
                 
-                fig_performance = go.Figure()
-                fig_performance.add_trace(go.Bar(
-                    name='Current Score',
-                    x=performance_data["Metric"],
-                    y=performance_data["Score"],
-                    marker_color='#667eea'
-                ))
-                fig_performance.add_trace(go.Bar(
-                    name='Target',
-                    x=performance_data["Metric"],
-                    y=performance_data["Target"],
-                    marker_color='#764ba2',
-                    opacity=0.7
-                ))
-                
-                fig_performance.update_layout(
-                    title="System Performance vs Targets",
-                    barmode='group',
-                    yaxis_title="Score (%)"
-                )
-                st.plotly_chart(fig_performance, use_container_width=True)
+                if PLOTLY_AVAILABLE:
+                    fig_performance = go.Figure()
+                    fig_performance.add_trace(go.Bar(
+                        name='Current Score',
+                        x=performance_data["Metric"],
+                        y=performance_data["Score"],
+                        marker_color='#667eea'
+                    ))
+                    fig_performance.add_trace(go.Bar(
+                        name='Target',
+                        x=performance_data["Metric"],
+                        y=performance_data["Target"],
+                        marker_color='#764ba2',
+                        opacity=0.7
+                    ))
+                    
+                    fig_performance.update_layout(
+                        title="System Performance vs Targets",
+                        barmode='group',
+                        yaxis_title="Score (%)"
+                    )
+                    st.plotly_chart(fig_performance, use_container_width=True)
+                else:
+                    # Fallback display
+                    st.write("**System Performance Metrics:**")
+                    for i, metric in enumerate(performance_data["Metric"]):
+                        current = performance_data["Score"][i]
+                        target = performance_data["Target"][i]
+                        status = "✅" if current >= target else "⚠️"
+                        st.write(f"{status} {metric}: {current}% (Target: {target}%)")
+                    st.info("📊 Chart visualization disabled (Plotly not available)")
                 
                 # Technical metrics table
                 st.subheader("🔧 Technical Specifications")
