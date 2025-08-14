@@ -29,32 +29,109 @@ from chromadb_rag_system import FaissRAGSystem, setup_demo_knowledge
 
 # Import scraper
 import sys
-sys.path.insert(0, os.path.join(os.getcwd(), 'src', 'scrapers'))
+import os
+
+# Try multiple import paths for Streamlit Cloud compatibility
+SCRAPER_AVAILABLE = False
+TrendyolSeleniumScraper = None
+
+# Get the current directory
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+
+# Method 1: Add src/scrapers to path
 try:
+    scrapers_path = os.path.join(current_dir, 'src', 'scrapers')
+    if os.path.exists(scrapers_path):
+        sys.path.insert(0, scrapers_path)
+    else:
+        scrapers_path = os.path.join(parent_dir, 'src', 'scrapers')
+        if os.path.exists(scrapers_path):
+            sys.path.insert(0, scrapers_path)
+    
     from trendyol_selenium_scraper import TrendyolSeleniumScraper
     SCRAPER_AVAILABLE = True
-except ImportError:
-    SCRAPER_AVAILABLE = False
+    print(f"✅ Scraper imported from {scrapers_path}")
+except ImportError as e:
+    print(f"⚠️ Method 1 failed: {e}")
+    
+    # Method 2: Try relative import
+    try:
+        from src.scrapers.trendyol_selenium_scraper import TrendyolSeleniumScraper
+        SCRAPER_AVAILABLE = True
+        print("✅ Scraper imported from src.scrapers (relative)")
+    except ImportError as e:
+        print(f"⚠️ Method 2 failed: {e}")
+        
+        # Method 3: Try copying scraper to current directory
+        try:
+            scraper_file = os.path.join(current_dir, 'trendyol_selenium_scraper.py')
+            if os.path.exists(scraper_file):
+                from trendyol_selenium_scraper import TrendyolSeleniumScraper
+                SCRAPER_AVAILABLE = True
+                print("✅ Scraper imported from current directory")
+            else:
+                raise ImportError("Scraper file not found in current directory")
+        except ImportError as e:
+            print(f"❌ All import methods failed: {e}")
+            SCRAPER_AVAILABLE = False
 
 # Import analyzers
-sys.path.insert(0, os.path.join(os.getcwd(), 'src', 'analyzers'))
+# Try multiple import paths for Streamlit Cloud compatibility
+
+# Add analyzers path
+analyzers_path = os.path.join(current_dir, 'src', 'analyzers')
+if os.path.exists(analyzers_path):
+    sys.path.insert(0, analyzers_path)
+else:
+    analyzers_path = os.path.join(parent_dir, 'src', 'analyzers')
+    if os.path.exists(analyzers_path):
+        sys.path.insert(0, analyzers_path)
+
+# Topic Modeling Analyzer
+TOPIC_ANALYZER_AVAILABLE = False
+TopicModelingAnalyzer = None
 try:
     from topic_modeling_analyzer import TopicModelingAnalyzer
     TOPIC_ANALYZER_AVAILABLE = True
-except ImportError:
-    TOPIC_ANALYZER_AVAILABLE = False
+    print(f"✅ Topic Modeling Analyzer imported from {analyzers_path}")
+except ImportError as e:
+    try:
+        from src.analyzers.topic_modeling_analyzer import TopicModelingAnalyzer
+        TOPIC_ANALYZER_AVAILABLE = True
+        print("✅ Topic Modeling Analyzer imported (relative)")
+    except ImportError as e2:
+        print(f"❌ Topic Modeling Analyzer import failed: {e}, {e2}")
 
+# Comment Summarizer
+COMMENT_SUMMARIZER_AVAILABLE = False
+CommentSummarizer = None
 try:
     from comment_summarizer import CommentSummarizer
     COMMENT_SUMMARIZER_AVAILABLE = True
+    print("✅ Comment Summarizer imported")
 except ImportError:
-    COMMENT_SUMMARIZER_AVAILABLE = False
+    try:
+        from src.analyzers.comment_summarizer import CommentSummarizer
+        COMMENT_SUMMARIZER_AVAILABLE = True
+        print("✅ Comment Summarizer imported (relative)")
+    except ImportError:
+        print("❌ Comment Summarizer import failed")
 
+# Contextual Keyword Analyzer
+CONTEXTUAL_ANALYZER_AVAILABLE = False
+ContextualKeywordAnalyzer = None
 try:
     from contextual_keyword_analyzer import ContextualKeywordAnalyzer
     CONTEXTUAL_ANALYZER_AVAILABLE = True
+    print("✅ Contextual Keyword Analyzer imported")
 except ImportError:
-    CONTEXTUAL_ANALYZER_AVAILABLE = False
+    try:
+        from src.analyzers.contextual_keyword_analyzer import ContextualKeywordAnalyzer
+        CONTEXTUAL_ANALYZER_AVAILABLE = True
+        print("✅ Contextual Keyword Analyzer imported (relative)")
+    except ImportError:
+        print("❌ Contextual Keyword Analyzer import failed")
 
 # Page Configuration
 st.set_page_config(
