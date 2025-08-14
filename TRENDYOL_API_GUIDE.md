@@ -316,12 +316,5 @@ Bu sistem sayesinde:
 
 ---
 
-## 📞 Destek
-
-Sorularınız için:
-- GitHub Issues
-- Email: [your-email@domain.com]
-- Documentation: [link-to-docs]
-
 **Son Güncelleme:** 2024-01-XX
 **Versiyon:** 1.0.0 
