@@ -571,6 +571,46 @@ if st.session_state.system_ready:
                         "Kargo geç geldi ama kalite iyi",4,"2024-01-14"
                         ```
                         """)
+                    
+                    # API-based fallback for Streamlit Cloud (no Selenium/browser)
+                    if product_url and product_url.startswith("https://www.trendyol.com"):
+                        st.info("🔁 Trying API-based scraping fallback (no browser)...")
+                        with st.spinner("🕷️ Fetching comments via Trendyol API... This may take a minute..."):
+                            reviews = []
+                            try:
+                                from enhanced_trendyol_api import EnhancedTrendyolAPI
+                                api = EnhancedTrendyolAPI()
+                                # Use min_comments as target count to align with user setting
+                                reviews = api.get_all_reviews(product_url, target_count=int(min_comments))
+                            except Exception as e:
+                                st.error(f"API fallback failed: {e}")
+                                reviews = []
+                        
+                        if reviews:
+                            # Save reviews to CSV (using the helper if available)
+                            csv_filename = f"scraped_comments_{int(time.time())}.csv"
+                            try:
+                                api.save_reviews_to_csv(reviews, filename=csv_filename)
+                            except Exception:
+                                # Fallback save with pandas
+                                df_tmp = pd.DataFrame(reviews)
+                                df_tmp.to_csv(csv_filename, index=False, encoding='utf-8-sig')
+                            
+                            # Process with RAG system
+                            added_count = st.session_state.rag_system.load_comments_from_csv(csv_filename)
+                            st.session_state.system_stats = st.session_state.rag_system.get_stats()
+                            
+                            # Success UI
+                            st.success(f"🎉 Successfully scraped and processed {len(reviews)} comments via API!")
+                            col_s1, col_s2, col_s3 = st.columns(3)
+                            with col_s1:
+                                st.metric("Comments Scraped", len(reviews))
+                            with col_s2:
+                                st.metric("Comments Added to RAG", added_count)
+                            with col_s3:
+                                st.metric("Source", "API")
+                        else:
+                            st.info("No comments fetched via API. Please use the CSV upload feature above.")
                 elif product_url and product_url.startswith("https://www.trendyol.com"):
                     with st.spinner("🕷️ Scraping comments from Trendyol... This may take several minutes..."):
                         try:
@@ -623,21 +663,8 @@ if st.session_state.system_ready:
                                 with col_s2:
                                     st.metric("Comments Added to RAG", added_count)
                                 with col_s3:
-                                    st.metric("Processing Time", "Live")
-                                
-                                # Show sample comments
-                                st.subheader("📝 Sample Scraped Comments")
-                                for i, comment in enumerate(comments[:3], 1):
-                                    with st.expander(f"Comment {i}: {comment.get('comment', '')[:50]}..."):
-                                        st.write(f"**User:** {comment.get('user', 'Unknown')}")
-                                        st.write(f"**Date:** {comment.get('date', 'Unknown')}")
-                                        st.write(f"**Rating:** {comment.get('rating', 'N/A')}")
-                                        st.write(f"**Comment:** {comment.get('comment', '')}")
-                                
-                                # Clean up temporary file
-                                if os.path.exists(csv_filename):
-                                    os.remove(csv_filename)
-                                
+                                    st.metric("Source", "Selenium")
+                            
                             else:
                                 st.error("❌ No comments were scraped. Please check the URL and try again.")
                             
