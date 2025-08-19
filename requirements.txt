@@ -1,37 +1,16 @@
-# Core Streamlit and Web Framework
-streamlit>=1.28.0
-flask>=2.3.3
+# FastAPI and server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
 
-# Data Processing and Analysis
-pandas>=2.1.0
-numpy>=1.26.0
-plotly>=5.15.0
-matplotlib>=3.8.0
-seaborn>=0.13.0
+# Web scraping
+playwright>=1.40.0
+beautifulsoup4>=4.12.0
+requests>=2.31.0
 
-# AI and Machine Learning
-sentence-transformers>=2.2.0
-scikit-learn>=1.7.0
-faiss-cpu>=1.7.4
-nltk>=3.8.1
-
-# Database and Storage
-# sqlite3 is built-in Python module, no need to install
-chromadb>=0.4.0
-
-# Web Scraping
-selenium==4.15.2
-beautifulsoup4==4.12.2
-requests==2.31.0
+# Data processing
+pandas>=1.5.0
+numpy>=1.21.0
 
 # Utilities
-python-dateutil>=2.8.0
-tqdm>=4.65.0
-Pillow>=10.0.0
-
-# Optional: GPU support (uncomment if needed)
-# faiss-gpu>=1.7.4
-# torch>=2.0.0
-
-# Note: For Python 3.13 compatibility, some packages may need specific versions
-# If you encounter issues, try using Python 3.11 or 3.12 instead 
+python-dotenv>=1.0.0
+python-multipart>=0.0.6 

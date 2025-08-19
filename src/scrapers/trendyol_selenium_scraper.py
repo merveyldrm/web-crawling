@@ -1,5 +1,6 @@
 import time
 import csv
+import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -11,31 +12,56 @@ from selenium.webdriver.chrome.service import Service
 class TrendyolSeleniumScraper:
     def __init__(self):
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')  # Production için tekrar açın
+        
+        # Cloud environment optimizations
+        options.add_argument('--headless')
         options.add_argument('--disable-gpu')
         options.add_argument('--no-sandbox')
-        # Anti-bot bypass (en önemli kısım)
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-web-security')
+        options.add_argument('--allow-running-insecure-content')
+        options.add_argument('--disable-features=VizDisplayCompositor')
+        
+        # Anti-bot bypass
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option('useAutomationExtension', False)
-        # Büyük ekran boyutu ayarla - %30 daha büyük desktop simülasyonu
-        options.add_argument('--window-size=2560,1440')  # 2K resolution
-        options.add_argument('--start-maximized')
-        # Gerçek kullanıcı gibi görün
+        
+        # Set Chrome binary path for cloud environments
+        chrome_bin = os.getenv('CHROME_BIN', '/usr/bin/google-chrome')
+        if os.path.exists(chrome_bin):
+            options.binary_location = chrome_bin
+        
+        # Window size for cloud
+        options.add_argument('--window-size=1920,1080')
         options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
         
-        # Otomatik Chrome driver yönetimi
-        service = Service(ChromeDriverManager().install())
-        self.driver = webdriver.Chrome(service=service, options=options)
+        # Chrome driver setup
+        try:
+            # Try to use system chromedriver first
+            chrome_driver_path = os.getenv('CHROME_DRIVER_PATH', '/usr/bin/chromedriver')
+            if os.path.exists(chrome_driver_path):
+                service = Service(chrome_driver_path)
+            else:
+                # Fallback to webdriver-manager
+                service = Service(ChromeDriverManager().install())
+            
+            self.driver = webdriver.Chrome(service=service, options=options)
+        except Exception as e:
+            print(f"Chrome driver setup failed: {e}")
+            # Try with minimal options
+            options.add_argument('--disable-extensions')
+            options.add_argument('--disable-plugins')
+            service = Service(ChromeDriverManager().install())
+            self.driver = webdriver.Chrome(service=service, options=options)
         
-        # Bot tespitini engelle
+        # Bot detection bypass
         self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
         
-        # Tarayıcı başlatıldıktan sonra da pencere boyutunu garantilemek için tekrar ayarla
-        self.driver.set_window_size(2560, 1440)
+        # Set window size
+        self.driver.set_window_size(1920, 1080)
         
-        # Viewport'u da büyük ayarla ve zoom seviyesini kontrol et
-        self.driver.execute_script("document.body.style.zoom='1.0'")
+        print("✅ Selenium scraper initialized successfully")
 
     def wait_for_comments_to_load(self, timeout=30):
         selectors = [
