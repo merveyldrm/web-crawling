@@ -1,16 +1,29 @@
-# FastAPI and server
+# Streamlit app
+streamlit
+plotly
+
+# FastAPI and server (optional, for external scraper API)
 fastapi
 uvicorn[standard]
 
 # Web scraping
-playwright>=1.40.0
-beautifulsoup4>=4.12.0
-requests>=2.31.0
+playwright
+beautifulsoup4
+requests
+selenium
+webdriver-manager
+
+# RAG and ML
+sentence-transformers
+faiss-cpu
+scikit-learn
+transformers
+torch
 
 # Data processing
-pandas>=1.5.0
-numpy>=1.21.0
+pandas
+numpy
 
 # Utilities
-python-dotenv>=1.0.0
-python-multipart>=0.0.6 
+python-dotenv
+python-multipart
