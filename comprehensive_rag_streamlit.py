@@ -549,68 +549,48 @@ if st.session_state.system_ready:
                 max_scrolls = st.number_input("Max Scrolls:", min_value=10, max_value=200, value=50)
             
             if st.button("🚀 Start Scraping", type="primary", help="This will open a web browser and scrape comments"):
-                if not SCRAPER_AVAILABLE:
-                    st.warning("🚧 Selenium-based scraping is not available in Streamlit Cloud due to system limitations.")
-                    st.info("💡 Please use the CSV upload feature above to load your comment data.")
-                    
-                    with st.expander("📖 How to get Trendyol comments manually"):
-                        st.markdown("""
-                        **Manual Comment Collection Steps:**
-                        
-                        1. **Visit the Trendyol product page**
-                        2. **Scroll down to comments section** 
-                        3. **Load more comments** by clicking "Load More" or scrolling
-                        4. **Copy comments manually** or use browser developer tools
-                        5. **Create a CSV file** with columns: `text`, `rating`, `date`
-                        6. **Upload the CSV** using the file uploader above
-                        
-                        **CSV Format Example:**
-                        ```
-                        text,rating,date
-                        "Ürün çok güzel, beğendim",5,"2024-01-15"
-                        "Kargo geç geldi ama kalite iyi",4,"2024-01-14"
-                        ```
-                        """)
-                    
-                    # API-based fallback for Streamlit Cloud (no Selenium/browser)
-                    if product_url and product_url.startswith("https://www.trendyol.com"):
-                        st.info("🔁 Trying API-based scraping fallback (no browser)...")
-                        with st.spinner("🕷️ Fetching comments via Trendyol API... This may take a minute..."):
-                            reviews = []
+                # External FastAPI scraper endpoint (preferred on Streamlit Cloud)
+                scraper_api_url = os.getenv("SCRAPER_API_URL") or st.secrets.get("SCRAPER_API_URL", None) if hasattr(st, 'secrets') else None
+                if scraper_api_url:
+                    if not product_url or not product_url.startswith("https://www.trendyol.com"):
+                        st.error("Please provide a valid Trendyol product URL")
+                    else:
+                        with st.spinner("🕷️ Requesting scrape via external API..."):
                             try:
-                                from enhanced_trendyol_api import EnhancedTrendyolAPI
-                                api = EnhancedTrendyolAPI()
-                                # Use min_comments as target count to align with user setting
-                                reviews = api.get_all_reviews(product_url, target_count=int(min_comments))
+                                import requests
+                                payload = {
+                                    "url": product_url,
+                                    "min_comments": int(min_comments),
+                                    "max_scrolls": int(max_scrolls)
+                                }
+                                resp = requests.post(scraper_api_url.rstrip('/') + "/scrape/trendyol", json=payload, timeout=120)
+                                if resp.status_code == 200:
+                                    data = resp.json()
+                                    comments = data.get("comments", [])
+                                    if comments:
+                                        # Save to CSV compatible with loader
+                                        csv_filename = f"scraped_comments_{int(time.time())}.csv"
+                                        pd.DataFrame(comments).to_csv(csv_filename, index=False, encoding='utf-8-sig')
+                                        added_count = st.session_state.rag_system.load_comments_from_csv(csv_filename)
+                                        st.session_state.system_stats = st.session_state.rag_system.get_stats()
+                                        st.success(f"🎉 API scraped and processed {len(comments)} comments!")
+                                        col_s1, col_s2, col_s3 = st.columns(3)
+                                        with col_s1:
+                                            st.metric("Comments Scraped", len(comments))
+                                        with col_s2:
+                                            st.metric("Comments Added to RAG", added_count)
+                                        with col_s3:
+                                            st.metric("Source", data.get("source", "api"))
+                                    else:
+                                        st.info("No comments returned by API.")
+                                else:
+                                    st.error(f"API error {resp.status_code}: {resp.text}")
                             except Exception as e:
-                                st.error(f"API fallback failed: {e}")
-                                reviews = []
-                        
-                        if reviews:
-                            # Save reviews to CSV (using the helper if available)
-                            csv_filename = f"scraped_comments_{int(time.time())}.csv"
-                            try:
-                                api.save_reviews_to_csv(reviews, filename=csv_filename)
-                            except Exception:
-                                # Fallback save with pandas
-                                df_tmp = pd.DataFrame(reviews)
-                                df_tmp.to_csv(csv_filename, index=False, encoding='utf-8-sig')
-                            
-                            # Process with RAG system
-                            added_count = st.session_state.rag_system.load_comments_from_csv(csv_filename)
-                            st.session_state.system_stats = st.session_state.rag_system.get_stats()
-                            
-                            # Success UI
-                            st.success(f"🎉 Successfully scraped and processed {len(reviews)} comments via API!")
-                            col_s1, col_s2, col_s3 = st.columns(3)
-                            with col_s1:
-                                st.metric("Comments Scraped", len(reviews))
-                            with col_s2:
-                                st.metric("Comments Added to RAG", added_count)
-                            with col_s3:
-                                st.metric("Source", "API")
-                        else:
-                            st.info("No comments fetched via API. Please use the CSV upload feature above.")
+                                st.error(f"Failed to call scraper API: {e}")
+                elif not SCRAPER_AVAILABLE:
+                    st.warning("🚧 Selenium-based scraping is not available in Streamlit Cloud due to system limitations.")
+                    st.info("💡 Set SCRAPER_API_URL in Streamlit secrets to use external FastAPI scraper.")
+                    # ... existing manual CSV guidance ...
                 elif product_url and product_url.startswith("https://www.trendyol.com"):
                     with st.spinner("🕷️ Scraping comments from Trendyol... This may take several minutes..."):
                         try:
@@ -664,7 +644,6 @@ if st.session_state.system_ready:
                                     st.metric("Comments Added to RAG", added_count)
                                 with col_s3:
                                     st.metric("Source", "Selenium")
-                            
                             else:
                                 st.error("❌ No comments were scraped. Please check the URL and try again.")
                             
@@ -674,13 +653,9 @@ if st.session_state.system_ready:
                         except Exception as e:
                             st.error(f"❌ Scraping failed: {str(e)}")
                             st.error("Check the console for detailed error information.")
-                            # Print error to console for debugging
                             print(f"Scraping error: {str(e)}")
                             import traceback
                             traceback.print_exc()
-                else:
-                    st.error("❌ Please enter a valid Trendyol URL starting with https://www.trendyol.com")
-            
             # Scraping Tips
             with st.expander("💡 Scraping Tips & Information"):
                 st.markdown("""
